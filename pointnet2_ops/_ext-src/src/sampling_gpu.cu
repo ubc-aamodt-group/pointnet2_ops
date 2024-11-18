@@ -4,6 +4,8 @@
 
 #include "cuda_utils.h"
 
+#include <curand_kernel.h>
+
 // input: points(b, c, n) idx(b, m)
 // output: out(b, c, m)
 template<typename scalar_t>
@@ -103,8 +105,44 @@ __device__ void __update(scalar_t *__restrict__ dists, int *__restrict__ dists_i
   dists_i[idx1] = v2 > v1 ? i2 : i1;
 }
 
+/* This is a random point sampling kernel */
+template <typename scalar_t, unsigned int block_size>
+__global__ void furthest_point_sampling_kernel(
+    int b,
+    int n,
+    int m,
+    const scalar_t *__restrict__ dataset,
+    scalar_t *__restrict__ temp,
+    int *__restrict__ idx) 
+{
+  if (m <= 0) return;
+
+  // Initialize random number generator
+  __shared__ curandState rand_state[block_size];
+  int tid = threadIdx.x;
+
+  if (tid < block_size) {
+    curand_init(1234, tid, 0, &rand_state[tid]);  // Seed RNG with a fixed value for reproducibility
+  }
+  __syncthreads();
+
+  // Offset pointers for the current batch
+  int batch_index = blockIdx.x;
+  dataset += batch_index * n * 3;
+  idx += batch_index * m;
+
+  // Random point sampling
+  for (int j = tid; j < m; j += block_size) {
+    // Generate a random index
+    int random_index = curand(&rand_state[tid]) % n;
+    idx[j] = random_index;
+  }
+}
+
+/* This is the original furthest point sampling kernel*/
 // Input dataset: (b, n, 3), tmp: (b, n)
 // Ouput idx (b, m)
+/*
 template <typename scalar_t, unsigned int block_size>
 __global__ void furthest_point_sampling_kernel(
     int b,
@@ -215,6 +253,7 @@ __global__ void furthest_point_sampling_kernel(
     if (tid == 0) idx[j] = old;
   }
 }
+*/
 
 at::Tensor furthest_point_sampling_kernel_wrapper(
     int b,
