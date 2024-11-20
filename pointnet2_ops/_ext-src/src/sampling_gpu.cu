@@ -106,6 +106,7 @@ __device__ void __update(scalar_t *__restrict__ dists, int *__restrict__ dists_i
 }
 
 /* This is a random point sampling kernel */
+/*
 template <typename scalar_t, unsigned int block_size>
 __global__ void furthest_point_sampling_kernel(
     int b,
@@ -138,11 +139,11 @@ __global__ void furthest_point_sampling_kernel(
     idx[j] = random_index;
   }
 }
-
+*/
 /* This is the original furthest point sampling kernel*/
 // Input dataset: (b, n, 3), tmp: (b, n)
 // Ouput idx (b, m)
-/*
+
 template <typename scalar_t, unsigned int block_size>
 __global__ void furthest_point_sampling_kernel(
     int b,
@@ -253,7 +254,7 @@ __global__ void furthest_point_sampling_kernel(
     if (tid == 0) idx[j] = old;
   }
 }
-*/
+
 
 at::Tensor furthest_point_sampling_kernel_wrapper(
     int b,
