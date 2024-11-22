@@ -122,7 +122,7 @@ __global__ void furthest_point_sampling_kernel(
   int tid = threadIdx.x;
 
   if (tid < block_size) {
-    curand_init(1234, tid, 0, &rand_state[tid]);  // Seed RNG with a fixed value for reproducibility
+    curand_init(clock64(), tid, 0, &rand_state[tid]);
   }
   __syncthreads();
 
