@@ -136,6 +136,7 @@ __global__ void furthest_point_sampling_kernel(
     // Generate a random index
     int random_index = curand(&rand_state[tid]) % n;
     idx[j] = random_index;
+    printf("%d\n", random_index);
   }
 }
 
